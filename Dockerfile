@@ -8,19 +8,20 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     build-essential \
-    && apt-get clean
+    --no-install-recommends && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copia los archivos necesarios al contenedor
 COPY requirements.txt requirements.txt
 
-# Instala las dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Actualiza pip y luego instala las dependencias de Python
+RUN python -m pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copia todo el proyecto al contenedor
 COPY . .
 
 # Recolecta archivos estáticos
-RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput || echo "Static collection skipped"
 
 # Expone el puerto por defecto que usará la aplicación
 EXPOSE 8000
